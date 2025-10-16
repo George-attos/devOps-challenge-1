@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Checking out source code...'
-                git 'https://github.com/George-attos/devOps-challenge-1.git'
+                git branch: 'main', url: 'https://github.com/George-attos/devOps-challenge-1.git'
             }
         }
 
