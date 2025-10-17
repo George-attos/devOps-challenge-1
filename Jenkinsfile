@@ -19,9 +19,9 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image..."
-                    // Run docker build and capture exit code
+                    // Correct Docker build command for Dockerfile in root
                     def buildStatus = sh(
-                        script: "docker build -t $DOCKER_IMAGE:$DOCKER_TAG Dockerfile .",
+                        script: "docker build -t $DOCKER_IMAGE:$DOCKER_TAG -f Dockerfile .",
                         returnStatus: true
                     )
                     if (buildStatus != 0) {
@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running pytest...'
-                    // Run pytest in hello folder and allow test failures without failing stage
+                    // Run tests in hello folder; allow failures
                     sh 'pytest ./hello || echo "Tests failed but continuing for demo"'
                 }
             }
