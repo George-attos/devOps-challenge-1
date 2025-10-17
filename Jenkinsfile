@@ -21,10 +21,13 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh 'pytest ./hello || echo "Tests failed but continuing"'
+                sh """
+                docker build -t test-image -f Dockerfile .
+                docker run --rm test-image pytest ./hello || echo "Tests failed but continuing"
+                """
             }
         }
-
+        
         stage('Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerID', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
