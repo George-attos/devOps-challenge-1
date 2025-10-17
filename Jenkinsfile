@@ -7,92 +7,38 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                echo 'Checking out source code...'
                 git branch: 'main', url: 'https://github.com/George-attos/devOps-challenge-1.git'
             }
         }
 
         stage('Build') {
             steps {
-                script {
-                    echo "Building Docker image..."
-                    // Correct Docker build command for Dockerfile in root
-                    def buildStatus = sh(
-                        script: "docker build -t $DOCKER_IMAGE:$DOCKER_TAG -f Dockerfile .",
-                        returnStatus: true
-                    )
-                    if (buildStatus != 0) {
-                        error("Docker build failed with exit code ${buildStatus}")
-                    }
-                }
+                sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG -f Dockerfile ."
             }
         }
 
         stage('Test') {
             steps {
-                script {
-                    echo 'Running pytest...'
-                    // Run tests in hello folder; allow failures
-                    sh 'pytest ./hello || echo "Tests failed but continuing for demo"'
-                }
+                sh 'pytest ./hello || echo "Tests failed but continuing"'
             }
         }
 
         stage('Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerID', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    script {
-                        echo 'Logging into Docker Hub...'
-                        def loginStatus = sh(
-                            script: 'echo $PASS | docker login -u $USER --password-stdin',
-                            returnStatus: true
-                        )
-                        if (loginStatus != 0) {
-                            error("Docker login failed")
-                        }
-
-                        echo 'Pushing Docker image to Docker Hub...'
-                        def pushStatus = sh(
-                            script: "docker push $DOCKER_IMAGE:$DOCKER_TAG",
-                            returnStatus: true
-                        )
-                        if (pushStatus != 0) {
-                            error("Docker push failed")
-                        }
-                    }
+                    sh 'echo $PASS | docker login -u $USER --password-stdin'
+                    sh "docker push $DOCKER_IMAGE:$DOCKER_TAG"
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                script {
-                    echo 'Deploying Docker container locally...'
-                    sh 'docker rm -f mu-do-C1 || true'
-                    def runStatus = sh(
-                        script: "docker run -d -p 5000:5000 --name mu-do-C1 $DOCKER_IMAGE:$DOCKER_TAG",
-                        returnStatus: true
-                    )
-                    if (runStatus != 0) {
-                        error("Docker run failed")
-                    }
-                }
+                sh 'docker rm -f mu-do-C1 || true'
+                sh "docker run -d -p 5000:5000 --name mu-do-C1 $DOCKER_IMAGE:$DOCKER_TAG"
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline finished.'
-        }
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Check console output for details.'
         }
     }
 }
