@@ -21,7 +21,7 @@ pipeline {
                     echo "Building Docker image..."
                     // Run docker build and capture exit code
                     def buildStatus = sh(
-                        script: "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ./hello",
+                        script: "docker build -t $DOCKER_IMAGE:$DOCKER_TAG Dockerfile .",
                         returnStatus: true
                     )
                     if (buildStatus != 0) {
