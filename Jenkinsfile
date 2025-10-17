@@ -14,13 +14,14 @@ pipeline {
             }
         }
 
-        stage('Build and Push') {
-            agent {
-                docker {
-                    image 'docker:25.0'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
+        stage('Verify Docker Access') {
+            steps {
+                echo 'Verifying Docker access inside Jenkins...'
+                sh 'docker ps'
             }
+        }
+
+        stage('Build and Push') {
             steps {
                 script {
                     echo 'Building Docker image...'
