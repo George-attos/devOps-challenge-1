@@ -21,13 +21,20 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh """
-                docker build -t test-image -f Dockerfile .
-                docker run --rm test-image pytest ./hello || echo "Tests failed but continuing"
-                """
+                script {
+                    echo 'Running tests inside Docker container...'
+                    // Run pytest from /app (root) and let it discover all tests recursively
+                    def testStatus = sh(
+                        script: "docker run --rm $DOCKER_IMAGE:$DOCKER_TAG pytest /app --maxfail=1 --disable-warnings",
+                        returnStatus: true
+                    )
+                    if (testStatus != 0) {
+                        error("Tests failed inside Docker container")
+                    }
+                }
             }
         }
-        
+
         stage('Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerID', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
